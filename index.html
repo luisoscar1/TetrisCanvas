@@ -1,0 +1,439 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        Canvas
+    </title>
+    <style type="text/css">
+        body {
+            background-color: gray;
+        }
+
+        canvas {
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="myCanvas" width="600" height="500"></canvas>
+
+    <script type="text/javascript">
+        const myCanvas = document.getElementById("myCanvas");
+        const ctx = myCanvas.getContext("2d");
+        var muros = [];
+        var pause = true;
+        var puntaje = 0;
+
+        class Rectangulo {
+
+            constructor(color, w, h, x, y, speed) {
+                this.color = color;
+                this.h = h;
+                this.w = w;
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+            }
+
+            colision(otro) {
+                if (
+                    this.x < otro.x + otro.w &&
+                    this.x + this.w > otro.x &&
+                    this.y < otro.y + otro.h &&
+                    this.y + this.h > otro.y
+                ) {
+                    return true;
+                }
+                return false;
+            }
+
+        }
+
+        class FiguraL {
+            constructor(color, x, y, speed) {
+                this.color = color;
+                this.speed = speed;
+                // Definimos los bloques que formarán la L
+                this.bloques = [
+                    new Rectangulo(color, 30, 30, x, y, speed),       // Bloque base
+                    new Rectangulo(color, 30, 30, x, y + 30, speed),  // Bloque inferior
+                    new Rectangulo(color, 30, 30, x, y + 60, speed),  // Bloque más abajo
+                    new Rectangulo(color, 30, 30, x + 30, y + 60, speed) // Bloque lateral
+                ];
+            }
+
+            dibujar(context) {
+                this.bloques.forEach(bloque => {
+                    context.fillStyle = bloque.color;
+                    context.fillRect(bloque.x, bloque.y, bloque.w, bloque.h);
+                });
+            }
+
+            mover(dx, dy) {
+                this.bloques.forEach(bloque => {
+                    bloque.x += dx;
+                    bloque.y += dy;
+                });
+            }
+
+            colision(otro) {
+                return this.bloques.some(bloque => bloque.colision(otro));
+            }
+        }
+
+        var player = new FiguraL("blue", 100, 100, 1); // Figura L ahora es el jugador
+        //var player = new Rectangulo("red", 30, 30, 100, 100, 5);
+
+        muros.push(new Rectangulo("gray", 300, 15, 150, 390, null));
+        muros.push(new Rectangulo("gray", 15, 300, 150, 90, null));
+        muros.push(new Rectangulo("gray", 15, 300, 435, 90, null));
+
+        var direction = '';
+        var speed = 1;
+
+        document.addEventListener('keypress', function (e) {
+            switch (e.keyCode) {
+                case 119: // W
+                    direction = 'up';
+                    break;
+                case 115: // S
+                    direction = 'down';
+                    break;
+                case 97:  // A
+                    direction = 'left';
+                    break;
+                case 100: // D
+                    direction = 'right';
+                    break;
+                case 32:  // Space
+                    pause = !pause;
+                    break;
+            }
+        });
+
+        function update() {
+            if (pause) {
+                switch (direction) {
+                    case 'up':
+                        player.mover(2, -speed);
+                        break;
+                    case 'down':
+                        player.mover(2, speed);
+                        break;
+                    case 'right':
+                        player.mover(speed, 2);
+                        break;
+                    case 'left':
+                        player.mover(-speed, 2);
+                        break;
+                }
+            } else {
+                ctx.fillStyle = "#bcbbcd";
+                ctx.fillRect(0, 0, 600, 500);
+            }
+
+            muros.forEach(function (muro) {
+                if (player.colision(muro)) {
+                    switch (direction) {
+                        case 'up':
+                            player.mover(0, speed);
+                            break;
+                        case 'down':
+                            player.mover(0, -speed);
+                            break;
+                        case 'right':
+                            player.mover(-speed, 0);
+                            break;
+                        case 'left':
+                            player.mover(speed, 0);
+                            break;
+                    }
+                }
+            });
+        }
+
+        function paint() {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, 600, 500);
+
+            ctx.font = "15px Arial";
+            ctx.fillStyle = "black";
+            ctx.fillText("puntaje: " + puntaje, 510, 30);
+
+            muros.forEach(function (muro) {
+                ctx.fillStyle = muro.color;
+                ctx.fillRect(muro.x, muro.y, muro.w, muro.h);
+            });
+
+            // Dibujamos el jugador (figura L)
+            player.dibujar(ctx);
+
+            update();
+            requestAnimationFrame(paint);
+        }
+
+        requestAnimationFrame(paint);
+
+        window.requestAnimationFrame = (function () {
+            return window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function (callback) {
+                    window.setTimeout(callback, 17);
+                };
+        }());
+
+    </script>
+</body>
+
+</html> -->
+
+
+<!--
+profe utilize su coddigo para no complicarme
+
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        Canvas
+    </title>
+    <style type="text/css">
+        body {
+            background-color: gray;
+        }
+
+        canvas {
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="myCanvas" width="600" height="500"></canvas>
+
+    <script type="text/javascript">
+        const myCanvas = document.getElementById("myCanvas");
+        const ctx = myCanvas.getContext("2d");
+        var muros = [];
+        var pause = true;
+        var puntaje = 0;
+        
+        class Rectangulo {
+
+            constructor(color, w, h, x, y, speed) {
+
+                this.color = color;
+                this.h = h;
+                this.w = w;
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+            }
+
+            colision(otro) {
+
+                if (
+                    this.x < otro.x + otro.w &&
+                    this.x + this.w > otro.x &&
+                    this.y < otro.y + otro.h &&
+                    this.y + this.h > otro.y
+                ) {
+                    return true;
+                }
+
+                return false;
+            }
+
+        }
+
+
+         class FiguraL {
+            constructor(color, x, y, speed) {
+                this.color = color;
+                this.speed = speed;
+                // Definimos los bloques que formarán la L
+                this.bloques = [
+                    new Rectangulo(color, 30, 30, x, y, speed),       // Bloque base
+                    new Rectangulo(color, 30, 30, x, y + 30, speed),  // Bloque inferior
+                    new Rectangulo(color, 30, 30, x, y + 60, speed),  // Bloque más abajo
+                    new Rectangulo(color, 30, 30, x + 30, y + 60, speed) // Bloque lateral
+                ];
+            }
+
+            dibujar(context) {
+                this.bloques.forEach(bloque => {
+                    context.fillStyle = bloque.color;
+                    context.fillRect(bloque.x, bloque.y, bloque.w, bloque.h);
+                });
+            }
+
+            mover(dx, dy) {
+                this.bloques.forEach(bloque => {
+                    bloque.x += dx;
+                    bloque.y += dy;
+                });
+            }
+
+            colision(otro) {
+                return this.bloques.some(bloque => bloque.colision(otro));
+            }
+        }
+
+        var player = new FiguraL("red", 30, 30, 5);
+
+        //var target = new Rectangulo("black", 10, 10, 200, 200, null);
+
+
+        muros.push(new Rectangulo("gray", 300, 15, 150, 390, null))
+        muros.push(new Rectangulo("gray", 15, 300, 150, 90, null))
+        muros.push(new Rectangulo("gray", 15, 300, 435, 90, null))
+
+
+        var direction = '';
+        var speed = 5;
+
+        document.addEventListener('keypress', function (e) {
+
+            switch (e.keyCode) {
+                case 119:
+                    direction = 'up';
+                    break;
+
+                case 115:
+                    direction = 'down';
+                    break;
+
+                case 97:
+                    direction = 'left';
+                    break;
+
+                case 100:
+                    direction = 'right';
+                    break;
+
+                case 32:
+                    pause = !pause;
+                    break;
+
+            }
+
+        })
+
+        function update() {
+            if (pause) {
+
+                switch (direction) {
+                    case 'up':
+                        player.mover(2, -speed);
+                        break;
+                    case 'down':
+                        player.mover(2, speed);
+                        break;
+                    case 'right':
+                        player.mover(speed, 2);
+                        break;
+                    case 'left':
+                        player.mover(-speed, 2);
+                        break;
+                }
+                /* if (player.colision(target)) {
+
+                    target.x = Math.floor(Math.random() * 500)
+                    target.y = Math.floor(Math.random() * 500)
+                    puntaje =puntaje +10;
+                    speed = +10;
+                } */
+            } else {
+                ctx.fillStyle = "#bcbbcd";
+                ctx.fillRect(0, 0, 600, 500)
+                
+            }
+
+
+
+            console.log(player.colision(muros))
+
+
+            muros.forEach(function (muros, i, array) {
+                if (player.colision(muros)) {
+
+                    switch (direction) {
+                        case 'up':
+                            player.y += speed;
+                            break;
+                        case 'down':
+                            player.y -= speed;
+                            break;
+                        case 'right':
+                            player.x -= speed;
+                            break;
+                        case 'left':
+                            player.x += speed;
+                            break;
+                    }
+                }
+            });
+
+        }
+
+
+
+
+
+        function paint() {
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, 600, 500)
+
+            ctx.font = "15px Arial";
+            ctx.fillStyle = "black";
+            ctx.fillText("puntaje: " + puntaje, 510, 30)
+
+
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.w, player.h)
+
+            /* ctx.fillStyle = target.color;
+            ctx.fillRect(target.x, target.y, target.w, target.h) */
+
+        
+            muros.forEach(function (muros, i, array) {
+                ctx.fillStyle = muros.color;
+                ctx.fillRect(muros.x, muros.y, muros.w, muros.h)
+            });
+            update()
+            requestAnimationFrame(paint);
+        }
+
+        requestAnimationFrame(paint);
+
+        window.requestAnimationFrame = (function () {
+            return window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function (callback) {
+                    window.setTimeout(callback, 17);
+                };
+        }());
+
+
+
+
+    </script>
+</body>
+
+</html> 
+
+
+
