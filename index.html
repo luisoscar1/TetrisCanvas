@@ -25,231 +25,137 @@ profe utilize su coddigo para no complicarme
 
 <body>
 
-    <canvas id="myCanvas" width="600" height="500"></canvas>
-
+    <!-- <canvas id="myCanvas" width="600" height="500"></canvas>
+ -->
     <script type="text/javascript">
-        const myCanvas = document.getElementById("myCanvas");
-        const ctx = myCanvas.getContext("2d");
-        
+        /* const myCanvas = document.getElementById("myCanvas");
+        const ctx = myCanvas.getContext("2d"); */
 
+        var direction = '';
         const tamañoBloque = 30;
         const bordeAncho = 10;
-        const bordeAlto = 20
+        const bordeAlto = 20;
+        const margenTablero = 20;
+        function setup() {
+            createCanvas(900, 600)
+            tablero = new Tablero()
+            mapeo()
+            tetrimino = new Tetrimino()
+            
+            resizeCanvas(tablero.ancho + margenTablero, tablero.alto + margenTablero)
+        }
 
-        class Tablero{
-            constructor(){
+        function draw() {
+            tablero.dibujar()
+            tetrimino.dibujar()
+            update()
+        }
+
+        class Tablero {
+            constructor() {
                 this.columnas = 10
                 this.filas = 20
                 this.lado_celda = 25
-                this.ancho = this.columnas*this.lado_celda
-                this.alto = this.filas*this.lado_celda
+                this.ancho = this.columnas * this.lado_celda
+                this.alto = this.filas * this.lado_celda
+                this.posicion = createVector(5, 2)
+            }
+
+
+            coordenada(x, y) {
+                return createVector(x, y).mult(this.lado_celda).add(this.posicion)
+            }
+
+            dibujar() {
+                for (let columnas = 0; columnas < this.columnas; columnas++) {
+                    for (let filas = 0; filas < this.filas; filas++) {
+                        let c = this.coordenada(columnas, filas)
+                        rect(c.x, c.y, this.lado_celda)
+                    }
+                }
             }
         }
 
+        function mapeo() {
+            tetriminos = {
+                "Z": {
+                    color: "blue",
+                    mapa: [
+                        createVector()
+                    ]
 
-        function setup(){
-
+                }
+            }
         }
 
+        class Tetrimino {
+            constructor(nombre = "Z") {
+                this.nombre = nombre
+                let tetriminoBase = tetriminos[nombre]
+                this.color = tetriminos.color
+                this.mapa = []
+                for (const tetri of tetriminoBase.mapa) {
+                    this.mapa.push(tetri.copy())
+                }
+                this.posicion = createVector(0, 0)
+            }
 
+            get mapaTablero(){
+                let retorno = []
+                for (const tetri of this.mapa) {
+                    let copiar = tetri.copy().add(this.posicion)
+                   retorno.push(tablero.coordenada(copiar.x, copiar.y))
+                }
+                return retorno
+            }
 
-        function pintar() {
-            
+            dibujar() {
+                push()
+                fill("red")
+                for (const tetri of this.mapaTablero) {
+                    rect(tetri.x, tetri.y, tablero.lado_celda)
+                }
+                pop()
+            }
         }
 
+        document.addEventListener('keydown', function (e) {
+            switch (e.key) {
+                case 'w':
+                    direction = 'up';
+                    break;
+                case 's':
+                    direction = 'down';
+                    break;
+                case 'a':
+                    direction = 'left';
+                    break;
+                case 'd':
+                    direction = 'right';
+                    break;
+            }
+        });
 
-        function paint() {
 
-         
-            requestAnimationFrame(paint);
+        function update() {
+            switch (direction) {
+                case 'up':
+                    tetrimino.posicion.y--;
+                    break;
+                case 'down':
+                    tetrimino.posicion.y++;
+                    break;
+                case 'right':
+                    tetrimino.posicion.x++;
+                    break;
+                case 'left':
+                    tetrimino.posicion.x--;
+                    break;
+            }
+            direction = '';
         }
-
-        requestAnimationFrame(paint);
-
-        window.requestAnimationFrame = (function () {
-            return window.requestAnimationFrame ||
-                window.webkitRequestAnimationFrame ||
-                window.mozRequestAnimationFrame ||
-                function (callback) {
-                    window.setTimeout(callback, 17);
-                };
-        }());
-
-
-
 
     </script>
 </body>
 
 </html>
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<body>
-    <canvas id="myCanvas" width="500" height="500"></canvas>
-    <script type="text/javascript">
-        const canvas = document.getElementById("myCanvas");
-        const ctx = canvas.getContext("2d");
-
-        var super_X = 100;
-        var super_y = 100;
-        var direccion = '';
-
-        class Rectangulo {
-            constructor(color, w, h, x, y) {
-                this.color = color;
-                this.w = w;
-                this.h = h;
-                this.x = x;
-                this.y = y;
-            }
-        }
-
-        function movimientoX() {
-            var numero = Math.floor(Math.random() * 500) + 1;
-            return numero;
-        }
-
-        function movimientoY() {
-            var numero2 = Math.floor(Math.random() * 500) + 1;
-            return numero2;
-        }
-
-        var player = new Rectangulo("red", 50, 50, 120, 120);
-        var colision = new Rectangulo("black", 10, 10, 20, 20);
-        var obstaculo = [];
-
-        obstaculo.push(new Rectangulo("grey", 200, 50, 150, 420));
-
-
-
-
-
-        document.addEventListener("keydown", event => {
-            if (event.key.startsWith("Arrow")) {
-                event.preventDefault();
-
-                switch (event.key) {
-                    case "ArrowUp":
-                        direccion = 'up';
-                        break;
-                    case "ArrowDown":
-                        direccion = 'down';
-                        break;
-                    case "ArrowLeft":
-                        direccion = 'left';
-                        break;
-                    case "ArrowRight":
-                        direccion = 'right';
-                        break;
-                }
-            }
-        });
-
-        function chocar() {
-            var n = movimientoX();
-            var x = movimientoY();
-            if (player.x < colision.x + 10 && player.x + 50 > colision.x && player.y < colision.y + 10 && player.y + 50 > colision.y) {
-                colision.x = n;
-                colision.y = x;
-            }
-        }
-
-        function detectarColisionConObstaculo() {
-
-
-            obstaculo.forEach(function (obstaculo, i, array) {
-                if (player.x < obstaculo.x + obstaculo.w &&
-                    player.x + player.w > obstaculo.x &&
-                    player.y < obstaculo.y + obstaculo.h &&
-                    player.y + player.h > obstaculo.y) {
-                    return true;
-                }
-            });
-
-            return false;
-        }
-
-        function movimiento() {
-            let posicionAnterior = { x: player.x, y: player.y };
-
-            switch (direccion) {
-                case 'up':
-                    player.y -= 8;
-                    break;
-                case 'down':
-                    player.y += 8;
-                    break;
-                case 'right':
-                    player.x += 8;
-                    break;
-                case 'left':
-                    player.x -= 8;
-                    break;
-            }
-
-            if (detectarColisionConObstaculo()) {
-                player.x = posicionAnterior.x;
-                player.y = posicionAnterior.y;
-            }
-
-            if (player.x > canvas.width) {
-                player.x = 0;
-            } else if (player.x < 0) {
-                player.x = canvas.width - 30;
-            }
-
-            if (player.y > canvas.height) {
-                player.y = 0;
-            } else if (player.y < 0) {
-                player.y = canvas.height - 30;
-            }
-
-            if (colision.x > canvas.width) {
-                colision.x = 0;
-            } else if (colision.x < 0) {
-                colision.x = canvas.width - 30;
-            }
-
-            if (colision.y > canvas.height) {
-                colision.y = 0;
-            } else if (colision.y < 0) {
-                colision.y = canvas.height - 30;
-            }
-        }
-
-        function pintar() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.w, player.h);
-
-            ctx.fillStyle = colision.color;
-            ctx.fillRect(colision.x, colision.y, colision.w, colision.h);
-
-
-            obstaculo.forEach(function (obstaculo, i, array) {
-                ctx.fillStyle = obstaculo.color;
-                ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
-            });
-            chocar();
-            movimiento();
-            requestAnimationFrame(pintar);
-        }
-
-        requestAnimationFrame(pintar);
-    </script>
-</body>
-
-</html> -->
