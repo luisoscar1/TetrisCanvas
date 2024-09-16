@@ -8,6 +8,8 @@
         Tetris
     </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.min.js"></script>
+
     <style type="text/css">
         body {
             background-color: gray;
@@ -30,7 +32,13 @@
         const bordeAlto = 20;
         const margenTablero = 20;
         var pausado = false;
+        var tablero, tetrimino;
+        let fondo,musica;
 
+        function preload() {
+            fondo = loadImage('arcade.png');
+            musica = loadSound('panther.mp3');
+        }
 
 
         function setup() {
@@ -38,8 +46,10 @@
             tablero = new Tablero()
             mapeo()
             tetrimino = new Tetrimino()
+            if (musica.isLoaded()) {
+                musica.loop();
+            }
 
-            
             setInterval(bajarAutomaticamente, 1000);
 
         }
@@ -60,21 +70,22 @@
                 }
             }
         }
-
         
         function draw() {
             if (pausado) {
                 mostrarPausa();
             } else {
-                background(255); 
+                image(fondo, 0, 0, width, height);
+
                 tablero.dibujar();
                 tetrimino.dibujar();
                 update();
             }
         }
 
+
         function bajarAutomaticamente() {
-            if (!pausado) { 
+            if (!pausado) {
                 tetrimino.posicion.y++;
                 if (tetrimino.colisionesEntreEllos) {
                     tetrimino.posicion.y--;
@@ -91,7 +102,7 @@
             }
         }
 
-
+       
         function mostrarPausa() {
             fill("#bcbbcd");
             rect(0, 0, width, height);
@@ -101,6 +112,8 @@
             text("PAUSE", width / 2, height / 2);
         }
 
+
+
         class Tablero {
             constructor() {
                 this.columnas = 10
@@ -108,7 +121,7 @@
                 this.lado_celda = 25
                 this.ancho = this.columnas * this.lado_celda
                 this.alto = this.filas * this.lado_celda
-                this.posicion = createVector(5, 2)
+                this.posicion = createVector(270, 2)
 
                 this.almacenar = [];
                 for (let filas = 0; filas < this.filas; filas++) {
@@ -170,6 +183,11 @@
             dibujar() {
                 for (let columnas = 0; columnas < this.columnas; columnas++) {
                     for (let filas = 0; filas < this.filas; filas++) {
+                          if ((columnas + filas) % 2 == 0) {
+                             fill("#7d77ef");
+                         } else {
+                             fill("white");
+                         } 
                         let c = this.coordenada(columnas, filas)
                         rect(c.x, c.y, this.lado_celda)
                     }
@@ -388,6 +406,7 @@
 
 
         }
+        
 
         function keyPressed() {
             if (key === ' ') {
@@ -410,7 +429,7 @@
             }
         }
 
-       
+     
         function update() {
             switch (direction) {
                 case 'up':
@@ -446,8 +465,7 @@
             }
             direction = '';
         }
-
     </script>
 </body>
 
-</html>
+</html> 
