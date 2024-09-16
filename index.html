@@ -41,7 +41,7 @@ profe utilize su coddigo para no complicarme
             tablero = new Tablero()
             mapeo()
             tetrimino = new Tetrimino()
-            
+
             resizeCanvas(tablero.ancho + margenTablero, tablero.alto + margenTablero)
         }
 
@@ -81,38 +81,146 @@ profe utilize su coddigo para no complicarme
                 "Z": {
                     color: "blue",
                     mapa: [
-                        createVector()
+                        createVector(),
+                        createVector(-1, -1),
+                        createVector(0, -1),
+                        createVector(1, 0)
                     ]
-
+                },
+                "S": {
+                    color: "red",
+                    mapa: [
+                        createVector(),
+                        createVector(1, -1),
+                        createVector(0, -1),
+                        createVector(-1, 0)
+                    ]
+                },
+                "J": {
+                    color: "yellow",
+                    mapa: [
+                        createVector(),
+                        createVector(-1, 0),
+                        createVector(-1, -1),
+                        createVector(1, 0)
+                    ]
+                },
+                "L": {
+                    color: "pink",
+                    mapa: [
+                        createVector(),
+                        createVector(-1, 0),
+                        createVector(1, -1),
+                        createVector(1, 0)
+                    ]
+                },
+                "T": {
+                    color: "orange",
+                    mapa: [
+                        createVector(),
+                        createVector(-1, 0),
+                        createVector(1, 0),
+                        createVector(0, -1)
+                    ]
+                },
+                "O": {
+                    color: "purple",
+                    mapa: [
+                        createVector(),
+                        createVector(0, -1),
+                        createVector(1, -1),
+                        createVector(1, 0)
+                    ]
+                },
+                "I": {
+                    color: "red",
+                    mapa: [
+                        createVector(),
+                        createVector(-1, 0),
+                        createVector(1, 0),
+                        createVector(2, 0)
+                    ]
                 }
             }
         }
 
         class Tetrimino {
-            constructor(nombre = "Z") {
+            constructor(nombre = random(["I", "O", "T", "L", "J", "S", "Z"])) {
                 this.nombre = nombre
                 let tetriminoBase = tetriminos[nombre]
-                this.color = tetriminos.color
+                this.color = tetriminoBase.color
                 this.mapa = []
                 for (const tetri of tetriminoBase.mapa) {
                     this.mapa.push(tetri.copy())
                 }
-                this.posicion = createVector(0, 0)
+                this.posicion = createVector(4, 1)
             }
 
-            get mapaTablero(){
+            girar() {
+                for (const tetri of this.mapa) {
+                    tetri.set(tetri.y, -tetri.x)
+
+                }
+                if (this.errores) {
+                    this.desgirar()
+                }
+            }
+
+            desgirar() {
+                for (const tetri of this.mapa) {
+                    tetri.set(-tetri.y, tetri.x)
+
+                }
+            }
+
+            get errores(){
+                return !tetrimino.colisiones
+            }
+
+            get colisiones() {
+                for (const tetri of this.mapaTablero) {
+
+                    if (tetri.x < 0) {
+                        return false;
+                    }
+
+                    if (tetri.x >= tablero.columnas) {
+                        return false;
+                    }
+
+                    if (tetri.y >= tablero.filas) {
+                        return false;
+                    }
+
+                    if (tetri.y < 0) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            get mapaTablero() {
                 let retorno = []
                 for (const tetri of this.mapa) {
                     let copiar = tetri.copy().add(this.posicion)
-                   retorno.push(tablero.coordenada(copiar.x, copiar.y))
+                    retorno.push(copiar)
+                }
+                return retorno
+            }
+
+            get mapaCanvas() {
+                let retorno = []
+                for (const tetri of this.mapa) {
+                    let copiar = tetri.copy().add(this.posicion)
+                    retorno.push(tablero.coordenada(copiar.x, copiar.y))
                 }
                 return retorno
             }
 
             dibujar() {
                 push()
-                fill("red")
-                for (const tetri of this.mapaTablero) {
+                fill(this.color)
+                for (const tetri of this.mapaCanvas) {
                     rect(tetri.x, tetri.y, tablero.lado_celda)
                 }
                 pop()
@@ -126,6 +234,7 @@ profe utilize su coddigo para no complicarme
                     break;
                 case 's':
                     direction = 'down';
+
                     break;
                 case 'a':
                     direction = 'left';
@@ -140,16 +249,25 @@ profe utilize su coddigo para no complicarme
         function update() {
             switch (direction) {
                 case 'up':
-                    tetrimino.posicion.y--;
+                    tetrimino.girar()
                     break;
                 case 'down':
                     tetrimino.posicion.y++;
+                    if (!tetrimino.colisiones) {
+                        tetrimino.posicion.y--;
+                    }
                     break;
                 case 'right':
                     tetrimino.posicion.x++;
+                    if (!tetrimino.colisiones) {
+                        tetrimino.posicion.x--;
+                    }
                     break;
                 case 'left':
                     tetrimino.posicion.x--;
+                    if (!tetrimino.colisiones) {
+                        tetrimino.posicion.x++;
+                    }
                     break;
             }
             direction = '';
