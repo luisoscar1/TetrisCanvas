@@ -1,7 +1,3 @@
-<!-- 
-profe utilize su coddigo para no complicarme
-
--->
 <!DOCTYPE html>
 <html>
 
@@ -25,30 +21,84 @@ profe utilize su coddigo para no complicarme
 
 <body>
 
-    <!-- <canvas id="myCanvas" width="600" height="500"></canvas>
- -->
     <script type="text/javascript">
-        /* const myCanvas = document.getElementById("myCanvas");
-        const ctx = myCanvas.getContext("2d"); */
+
 
         var direction = '';
         const tamañoBloque = 30;
         const bordeAncho = 10;
         const bordeAlto = 20;
         const margenTablero = 20;
+        var pausado = false;
+
+
+
         function setup() {
             createCanvas(900, 600)
             tablero = new Tablero()
             mapeo()
             tetrimino = new Tetrimino()
 
-            resizeCanvas(tablero.ancho + margenTablero, tablero.alto + margenTablero)
+            
+            setInterval(bajarAutomaticamente, 1000);
+
         }
 
+        function bajarAutomaticamente() {
+
+            tetrimino.posicion.y++;
+            if (tetrimino.colisionesEntreEllos) {
+                tetrimino.posicion.y--;
+                tetrimino.colocarEnTablero();
+
+                let nuevoTetrimino = new Tetrimino();
+                if (nuevoTetrimino.colisionesEntreEllos) {
+                    tablero = new Tablero();
+                    tetrimino = new Tetrimino();
+                } else {
+                    tetrimino = nuevoTetrimino;
+                }
+            }
+        }
+
+        
         function draw() {
-            tablero.dibujar()
-            tetrimino.dibujar()
-            update()
+            if (pausado) {
+                mostrarPausa();
+            } else {
+                background(255); 
+                tablero.dibujar();
+                tetrimino.dibujar();
+                update();
+            }
+        }
+
+        function bajarAutomaticamente() {
+            if (!pausado) { 
+                tetrimino.posicion.y++;
+                if (tetrimino.colisionesEntreEllos) {
+                    tetrimino.posicion.y--;
+                    tetrimino.colocarEnTablero();
+
+                    let nuevoTetrimino = new Tetrimino();
+                    if (nuevoTetrimino.colisionesEntreEllos) {
+                        tablero = new Tablero();
+                        tetrimino = new Tetrimino();
+                    } else {
+                        tetrimino = nuevoTetrimino;
+                    }
+                }
+            }
+        }
+
+
+        function mostrarPausa() {
+            fill("#bcbbcd");
+            rect(0, 0, width, height);
+            textSize(55);
+            fill(0);
+            textAlign(CENTER, CENTER);
+            text("PAUSE", width / 2, height / 2);
         }
 
         class Tablero {
@@ -72,14 +122,43 @@ profe utilize su coddigo para no complicarme
 
             }
 
-            /* set almacenarMinos(tetrimino) {
-                for (const tetri of tetrimino.mapaTablero) {
+            eliminarFilasCompletas() {
+                for (let fila = this.filas - 1; fila >= 0; fila--) {
+                    let filaCompleta = true;
+                    for (let columna = 0; columna < this.columnas; columna++) {
+                        if (!this.almacenar[columna][fila]) {
+                            filaCompleta = false;
+                            break;
+                        }
+                    }
 
-                    this.almacenar[tetri.x][tetri.y] = tetrimino.nombre
+                    if (filaCompleta) {
+                        this.eliminarFila(fila);
+                        fila++;
+                    }
                 }
-            } */
+            }
+
+            eliminarFila(fila) {
+
+                for (let y = fila; y > 0; y--) {
+                    for (let columna = 0; columna < this.columnas; columna++) {
+                        this.almacenar[columna][y] = this.almacenar[columna][y - 1];
+                    }
+                }
+
+                for (let columna = 0; columna < this.columnas; columna++) {
+                    this.almacenar[columna][0] = "";
+                }
+            }
             set almacenarMinos(tetrimino) {
                 for (const tetri of tetrimino.mapaTablero) {
+
+                    if (tetri.y < 0) {
+                        tablero = new Tablero()
+                        tetrimino = new Tetrimino()
+                    }
+
                     this.almacenar[tetri.x][tetri.y] = { nombre: tetrimino.nombre, color: tetrimino.color };
                 }
             }
@@ -99,29 +178,14 @@ profe utilize su coddigo para no complicarme
             }
 
 
-            /* dibujarMinos() {
-                push()
-                for (let columnas = 0; columnas < this.columnas; columnas++) {
-                    for (let filas = 0; filas < this.filas; filas++) {
-                        let nombreTetri = this.almacenar[columnas][filas];
 
-                        if (this.almacenar[columnas][filas]) {
-                            fill(tetriminoBase[nombreTetri].color)
-
-                            Tetrimino.dibujarTetri(this.coordenada(columnas, filas))
-
-                        }
-                    }
-                }
-                pop()
-            } */
             dibujarMinos() {
                 push()
                 for (let columnas = 0; columnas < this.columnas; columnas++) {
                     for (let filas = 0; filas < this.filas; filas++) {
                         let celda = this.almacenar[columnas][filas];
                         if (celda) {
-                            fill(celda.color); // Usar el color almacenado en la celda
+                            fill(celda.color);
                             Tetrimino.dibujarTetri(this.coordenada(columnas, filas));
                         }
                     }
@@ -130,6 +194,12 @@ profe utilize su coddigo para no complicarme
             }
 
         }
+
+
+
+
+
+
 
         function mapeo() {
             tetriminos = {
@@ -220,89 +290,67 @@ profe utilize su coddigo para no complicarme
                 }
             }
 
-            // Método para deshacer la rotación
+
             desgirar() {
                 for (const tetri of this.mapa) {
                     tetri.set(-tetri.y, tetri.x);
                 }
             }
-            /* girar() {
-                for (const tetri of this.mapa) {
-                    tetri.set(tetri.y, -tetri.x)
 
-                }
-                if (this.errores) {
-                    this.desgirar()
-                }
+            get enElTope() {
+
+                return this.mapaTablero.some(tetri => tetri.y < 0);
             }
 
-            desgirar() {
-                for (const tetri of this.mapa) {
-                    tetri.set(-tetri.y, tetri.x)
 
-                }
-            }
- */
             get errores() {
                 return !tetrimino.colisiones || this.colisionesEntreEllos;
             }
 
-            /* get colisionesEntreEllos() {
-                for (const tetri of this.mapaTablero) {
-                    if (tablero.almacenar[tetri.x][tetri.y]) {
-                        return true
-                    }
-                }
 
-
-                return false
-            } */
 
             get colisionesEntreEllos() {
                 for (const tetri of this.mapaTablero) {
                     if (tetri.x < 0 || tetri.x >= tablero.columnas || tetri.y >= tablero.filas) {
-                        return true; // Colisión con el borde del tablero
+                        return true;
                     }
                     if (tablero.almacenar[tetri.x][tetri.y]) {
-                        return true; // Colisión con otro tetrimino
+                        return true;
                     }
                 }
                 return false;
             }
 
-            /*  get colisiones() {
-                 for (const tetri of this.mapaTablero) {
- 
-                     if (tetri.x < 0) {
-                         return false;
-                     }
- 
-                     if (tetri.x >= tablero.columnas) {
-                         return false;
-                     }
- 
-                     if (tetri.y >= tablero.filas) {
-                         return false;
-                     }
- 
- 
-                 }
-                 return true;
-             } */
+
             get colisiones() {
                 for (const tetri of this.mapaTablero) {
                     if (tetri.x < 0 || tetri.x >= tablero.columnas || tetri.y >= tablero.filas) {
-                        return false; // Fuera de los límites del tablero
+                        return false;
                     }
                 }
                 return true;
             }
-            //nuevo
+
+
             colocarEnTablero() {
+                let tetriminoAlTope = false;
+
                 for (const tetri of this.mapaTablero) {
+                    if (tetri.y < 0) {
+                        tetriminoAlTope = true;
+                    }
+
                     if (tetri.x >= 0 && tetri.x < tablero.columnas && tetri.y >= 0 && tetri.y < tablero.filas) {
                         tablero.almacenar[tetri.x][tetri.y] = { nombre: this.nombre, color: this.color };
                     }
+                }
+
+                if (tetriminoAlTope) {
+                    tablero = new Tablero();
+                    tetrimino = new Tetrimino();
+                    console.log('Juego reiniciado: tetrimino alcanzó el tope');
+                } else {
+                    tablero.eliminarFilasCompletas();
                 }
             }
 
@@ -341,53 +389,28 @@ profe utilize su coddigo para no complicarme
 
         }
 
-        document.addEventListener('keydown', function (e) {
-            switch (e.key) {
-                case 'w':
-                    direction = 'up';
-                    break;
-                case 's':
-                    direction = 'down';
-
-                    break;
-                case 'a':
-                    direction = 'left';
-                    break;
-                case 'd':
-                    direction = 'right';
-                    break;
+        function keyPressed() {
+            if (key === ' ') {
+                pausado = !pausado;
+            } else if (!pausado) {
+                switch (key) {
+                    case 'w':
+                        direction = 'up';
+                        break;
+                    case 's':
+                        direction = 'down';
+                        break;
+                    case 'a':
+                        direction = 'left';
+                        break;
+                    case 'd':
+                        direction = 'right';
+                        break;
+                }
             }
-        });
+        }
 
-
-        /* function update() {
-            switch (direction) {
-                case 'up':
-                    tetrimino.girar()
-                    break;
-                case 'down':
-                    tetrimino.posicion.y++;
-                    if (!tetrimino.colisiones) {
-                        tetrimino.posicion.y--;
-                        tablero.almacenarMinos = tetrimino;
-                        tetrimino = new Tetrimino()
-                    }
-                    break;
-                case 'right':
-                    tetrimino.posicion.x++;
-                    if (!tetrimino.colisiones) {
-                        tetrimino.posicion.x--;
-                    }
-                    break;
-                case 'left':
-                    tetrimino.posicion.x--;
-                    if (!tetrimino.colisiones) {
-                        tetrimino.posicion.x++;
-                    }
-                    break;
-            }
-            direction = '';
-        } */
+       
         function update() {
             switch (direction) {
                 case 'up':
@@ -398,7 +421,14 @@ profe utilize su coddigo para no complicarme
                     if (tetrimino.colisionesEntreEllos) {
                         tetrimino.posicion.y--;
                         tetrimino.colocarEnTablero();
-                        tetrimino = new Tetrimino();
+
+                        let nuevoTetrimino = new Tetrimino();
+                        if (nuevoTetrimino.colisionesEntreEllos) {
+                            tablero = new Tablero();
+                            tetrimino = new Tetrimino();
+                        } else {
+                            tetrimino = nuevoTetrimino;
+                        }
                     }
                     break;
                 case 'right':
