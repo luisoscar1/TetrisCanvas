@@ -55,55 +55,37 @@
                 musica.loop();
             }
 
-            tiempoInicio = millis(); // Guardar el tiempo actual al inicio
+            tiempoInicio = millis(); 
             setInterval(bajarAutomaticamente, 1000);
         }
-        /* function setup() {
-            createCanvas(900, 600);
-            tablero = new Tablero();
-            mapeo();
-            tetrimino = new Tetrimino();
-            tetriminoSiguiente = new Tetrimino();
-            if (musica.isLoaded()) {
-                musica.loop();
-            }
-
-            setInterval(bajarAutomaticamente, 1000);
-        } */
+        
 
         function obtenerNombreAleatorio() {
             const opciones = ["I", "O", "T", "L", "J", "S", "Z"];
             const indiceAleatorio = Math.floor(Math.random() * opciones.length);
             return opciones[indiceAleatorio];
         }
-
+        function reiniciarTiempo() {
+            tiempoInicio = millis(); 
+        }
         function dibujarCronometro() {
-            // Calcular el tiempo transcurrido en segundos
             tiempoTranscurrido = Math.floor((millis() - tiempoInicio) / 1000);
-
-            // Convertir los segundos en minutos y segundos
             let minutos = Math.floor(tiempoTranscurrido / 60);
             let segundos = tiempoTranscurrido % 60;
-
-            // Formatear los segundos para que siempre tengan dos dígitos
             let segundosFormateados = segundos < 10 ? '0' + segundos : segundos;
-
-            // Configurar estilo de texto
-            fill(51, 50, 44); // Color rojo
-            textSize(48); // Tamaño de letra más grande
+            fill(51, 50, 44); 
+            textSize(48); 
             textAlign(RIGHT, TOP);
 
-            // Dibujar el cronómetro en la parte derecha
             text("Tiempo: " + minutos + ":" + segundosFormateados, width - 20, 20);
         }
 
         function dibujarPuntaje() {
-            // Configurar estilo de texto
-            fill(255, 0, 0); // Color rojo
-            textSize(48); // Tamaño de letra más grande
+            fill(255, 0, 0);  
+            textSize(48);  
             textAlign(RIGHT, TOP);
 
-            // Dibujar el puntaje en la parte derecha
+             
             text("Puntaje: " + puntaje, width - 20, 80);
         }
 
@@ -419,18 +401,22 @@
             }
         }
 
-        /* function draw() {
-            if (pausado) {
-                mostrarPausa();
-            } else {
-                image(fondo, 0, 0, width, height);
-                tablero.dibujar();
-                tetrimino.dibujar();
-                dibujarSiguienteTetrimino();
-                update();
-            }
-        } */
+        
 
+        function dibujarInstrucciones() {
+            fill("#5dde99");  
+            textSize(24); 
+            textAlign(LEFT, TOP);
+
+            let yOffset = 140; 
+
+            text("Instrucciones:", width - 250, yOffset);
+            text("Abajo: 's'", width - 250, yOffset + 40);
+            text("Izquierda: 'a'", width - 250, yOffset + 80);
+            text("Derecha: 'd'", width - 250, yOffset + 120);
+            text("Girar figura: 'w'", width - 250, yOffset + 160);
+            text("Nota: se reinicia solo", width - 250, yOffset + 200);
+        }
         function draw() {
             if (pausado) {
                 mostrarPausa();
@@ -442,7 +428,7 @@
                 update();
                 dibujarCronometro();
                 dibujarPuntaje();
-
+                dibujarInstrucciones();
             }
         }
 
@@ -467,6 +453,8 @@
                     tetriminoSiguiente = new Tetrimino();
 
                     if (tetrimino.colisionesEntreEllos) {
+                        puntaje = 0;
+                        reiniciarTiempo()
                         tablero = new Tablero();
                         tetrimino = new Tetrimino();
                         tetriminoSiguiente = new Tetrimino();
@@ -474,24 +462,7 @@
                 }
             }
         }
-        /*  function bajarAutomaticamente() {
-             if (!pausado && !juegoTerminado) {
-                 tetrimino.posicion.y++;
-                 if (tetrimino.colisionesEntreEllos) {
-                     tetrimino.posicion.y--;
-                     tetrimino.colocarEnTablero();
- 
-                     if (tetrimino.enElTope) {
-                         
-                         juegoTerminado = true;
-                     } else {
-                         tetrimino = tetriminoSiguiente;
-                         tetriminoSiguiente = new Tetrimino();
-                     }
-                 }
-             }
-         } */
-
+        
 
 
         function mostrarPausa() {
@@ -540,8 +511,7 @@
                         tetriminoSiguiente = new Tetrimino();
 
                         if (tetrimino.colisionesEntreEllos) {
-                            puntaje = 0;
-                            millis();
+
                             tablero = new Tablero();
                             tetrimino = new Tetrimino();
                             tetriminoSiguiente = new Tetrimino();
