@@ -4,12 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>
-        Tetris
-    </title>
+    <title>Tetris</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.min.js"></script>
-
     <style type="text/css">
         body {
             background-color: gray;
@@ -24,8 +21,6 @@
 <body>
 
     <script type="text/javascript">
-
-
         var direction = '';
         const tamañoBloque = 30;
         const bordeAncho = 10;
@@ -33,270 +28,106 @@
         const margenTablero = 20;
         var pausado = false;
         var tablero, tetrimino;
-        let fondo,musica;
+        let fondo, musica;
+        var tetriminoSiguiente;
+        let puntaje = 0;
+        let tiempoInicio;
+        let tiempoTranscurrido;
+        var juegoTerminado = false;
+
 
         function preload() {
             fondo = loadImage('arcade.png');
             musica = loadSound('panther.mp3');
+            sonidoColocacion = loadSound('coin.mp3');
+            sonidoEliminacion = loadSound('end.mp3');
         }
 
 
+
         function setup() {
-            createCanvas(900, 600)
-            tablero = new Tablero()
-            mapeo()
-            tetrimino = new Tetrimino()
+            createCanvas(900, 600);
+            tablero = new Tablero();
+            mapeo();
+            tetrimino = new Tetrimino();
+            tetriminoSiguiente = new Tetrimino();
+            if (musica.isLoaded()) {
+                musica.loop();
+            }
+
+            tiempoInicio = millis(); // Guardar el tiempo actual al inicio
+            setInterval(bajarAutomaticamente, 1000);
+        }
+        /* function setup() {
+            createCanvas(900, 600);
+            tablero = new Tablero();
+            mapeo();
+            tetrimino = new Tetrimino();
+            tetriminoSiguiente = new Tetrimino();
             if (musica.isLoaded()) {
                 musica.loop();
             }
 
             setInterval(bajarAutomaticamente, 1000);
+        } */
 
+        function obtenerNombreAleatorio() {
+            const opciones = ["I", "O", "T", "L", "J", "S", "Z"];
+            const indiceAleatorio = Math.floor(Math.random() * opciones.length);
+            return opciones[indiceAleatorio];
         }
 
-        function bajarAutomaticamente() {
+        function dibujarCronometro() {
+            // Calcular el tiempo transcurrido en segundos
+            tiempoTranscurrido = Math.floor((millis() - tiempoInicio) / 1000);
 
-            tetrimino.posicion.y++;
-            if (tetrimino.colisionesEntreEllos) {
-                tetrimino.posicion.y--;
-                tetrimino.colocarEnTablero();
+            // Convertir los segundos en minutos y segundos
+            let minutos = Math.floor(tiempoTranscurrido / 60);
+            let segundos = tiempoTranscurrido % 60;
 
-                let nuevoTetrimino = new Tetrimino();
-                if (nuevoTetrimino.colisionesEntreEllos) {
-                    tablero = new Tablero();
-                    tetrimino = new Tetrimino();
-                } else {
-                    tetrimino = nuevoTetrimino;
-                }
-            }
-        }
-        
-        function draw() {
-            if (pausado) {
-                mostrarPausa();
-            } else {
-                image(fondo, 0, 0, width, height);
+            // Formatear los segundos para que siempre tengan dos dígitos
+            let segundosFormateados = segundos < 10 ? '0' + segundos : segundos;
 
-                tablero.dibujar();
-                tetrimino.dibujar();
-                update();
-            }
+            // Configurar estilo de texto
+            fill(51, 50, 44); // Color rojo
+            textSize(48); // Tamaño de letra más grande
+            textAlign(RIGHT, TOP);
+
+            // Dibujar el cronómetro en la parte derecha
+            text("Tiempo: " + minutos + ":" + segundosFormateados, width - 20, 20);
         }
 
+        function dibujarPuntaje() {
+            // Configurar estilo de texto
+            fill(255, 0, 0); // Color rojo
+            textSize(48); // Tamaño de letra más grande
+            textAlign(RIGHT, TOP);
 
-        function bajarAutomaticamente() {
-            if (!pausado) {
-                tetrimino.posicion.y++;
-                if (tetrimino.colisionesEntreEllos) {
-                    tetrimino.posicion.y--;
-                    tetrimino.colocarEnTablero();
-
-                    let nuevoTetrimino = new Tetrimino();
-                    if (nuevoTetrimino.colisionesEntreEllos) {
-                        tablero = new Tablero();
-                        tetrimino = new Tetrimino();
-                    } else {
-                        tetrimino = nuevoTetrimino;
-                    }
-                }
-            }
+            // Dibujar el puntaje en la parte derecha
+            text("Puntaje: " + puntaje, width - 20, 80);
         }
 
-       
-        function mostrarPausa() {
+        function mostrarGameOver() {
             fill("#bcbbcd");
             rect(0, 0, width, height);
             textSize(55);
             fill(0);
             textAlign(CENTER, CENTER);
-            text("PAUSE", width / 2, height / 2);
-        }
-
-
-
-        class Tablero {
-            constructor() {
-                this.columnas = 10
-                this.filas = 20
-                this.lado_celda = 25
-                this.ancho = this.columnas * this.lado_celda
-                this.alto = this.filas * this.lado_celda
-                this.posicion = createVector(270, 2)
-
-                this.almacenar = [];
-                for (let filas = 0; filas < this.filas; filas++) {
-                    this.almacenar[filas] = [];
-                    for (let columnas = 0; columnas < this.columnas; columnas++) {
-                        this.almacenar[filas].push("")
-
-                    }
-
-                }
-
-            }
-
-            eliminarFilasCompletas() {
-                for (let fila = this.filas - 1; fila >= 0; fila--) {
-                    let filaCompleta = true;
-                    for (let columna = 0; columna < this.columnas; columna++) {
-                        if (!this.almacenar[columna][fila]) {
-                            filaCompleta = false;
-                            break;
-                        }
-                    }
-
-                    if (filaCompleta) {
-                        this.eliminarFila(fila);
-                        fila++;
-                    }
-                }
-            }
-
-            eliminarFila(fila) {
-
-                for (let y = fila; y > 0; y--) {
-                    for (let columna = 0; columna < this.columnas; columna++) {
-                        this.almacenar[columna][y] = this.almacenar[columna][y - 1];
-                    }
-                }
-
-                for (let columna = 0; columna < this.columnas; columna++) {
-                    this.almacenar[columna][0] = "";
-                }
-            }
-            set almacenarMinos(tetrimino) {
-                for (const tetri of tetrimino.mapaTablero) {
-
-                    if (tetri.y < 0) {
-                        tablero = new Tablero()
-                        tetrimino = new Tetrimino()
-                    }
-
-                    this.almacenar[tetri.x][tetri.y] = { nombre: tetrimino.nombre, color: tetrimino.color };
-                }
-            }
-
-            coordenada(x, y) {
-                return createVector(x, y).mult(this.lado_celda).add(this.posicion)
-            }
-
-            dibujar() {
-                for (let columnas = 0; columnas < this.columnas; columnas++) {
-                    for (let filas = 0; filas < this.filas; filas++) {
-                          if ((columnas + filas) % 2 == 0) {
-                             fill("#7d77ef");
-                         } else {
-                             fill("white");
-                         } 
-                        let c = this.coordenada(columnas, filas)
-                        rect(c.x, c.y, this.lado_celda)
-                    }
-                }
-                this.dibujarMinos()
-            }
-
-
-
-            dibujarMinos() {
-                push()
-                for (let columnas = 0; columnas < this.columnas; columnas++) {
-                    for (let filas = 0; filas < this.filas; filas++) {
-                        let celda = this.almacenar[columnas][filas];
-                        if (celda) {
-                            fill(celda.color);
-                            Tetrimino.dibujarTetri(this.coordenada(columnas, filas));
-                        }
-                    }
-                }
-                pop()
-            }
-
-        }
-
-
-
-
-
-
-
-        function mapeo() {
-            tetriminos = {
-                "Z": {
-                    color: "blue",
-                    mapa: [
-                        createVector(),
-                        createVector(-1, -1),
-                        createVector(0, -1),
-                        createVector(1, 0)
-                    ]
-                },
-                "S": {
-                    color: "red",
-                    mapa: [
-                        createVector(),
-                        createVector(1, -1),
-                        createVector(0, -1),
-                        createVector(-1, 0)
-                    ]
-                },
-                "J": {
-                    color: "yellow",
-                    mapa: [
-                        createVector(),
-                        createVector(-1, 0),
-                        createVector(-1, -1),
-                        createVector(1, 0)
-                    ]
-                },
-                "L": {
-                    color: "pink",
-                    mapa: [
-                        createVector(),
-                        createVector(-1, 0),
-                        createVector(1, -1),
-                        createVector(1, 0)
-                    ]
-                },
-                "T": {
-                    color: "orange",
-                    mapa: [
-                        createVector(),
-                        createVector(-1, 0),
-                        createVector(1, 0),
-                        createVector(0, -1)
-                    ]
-                },
-                "O": {
-                    color: "purple",
-                    mapa: [
-                        createVector(),
-                        createVector(0, -1),
-                        createVector(1, -1),
-                        createVector(1, 0)
-                    ]
-                },
-                "I": {
-                    color: "red",
-                    mapa: [
-                        createVector(),
-                        createVector(-1, 0),
-                        createVector(1, 0),
-                        createVector(2, 0)
-                    ]
-                }
-            }
+            text("GAME OVER", width / 2, height / 2);
+            textSize(30);
+            text("Press 'p' to Restart", width / 2, height / 2 + 50);
         }
 
         class Tetrimino {
-            constructor(nombre = random(["I", "O", "T", "L", "J", "S", "Z"])) {
-                this.nombre = nombre
-                let tetriminoBase = tetriminos[nombre]
-                this.color = tetriminoBase.color
-                this.mapa = []
+            constructor(nombre = obtenerNombreAleatorio()) {
+                this.nombre = nombre;
+                let tetriminoBase = tetriminos[nombre];
+                this.color = tetriminoBase.color;
+                this.mapa = [];
                 for (const tetri of tetriminoBase.mapa) {
-                    this.mapa.push(tetri.copy())
+                    this.mapa.push(tetri.copy());
                 }
-                this.posicion = createVector(4, 1)
+                this.posicion = createVector(4, 1);
             }
 
             girar() {
@@ -307,7 +138,6 @@
                     this.desgirar();
                 }
             }
-
 
             desgirar() {
                 for (const tetri of this.mapa) {
@@ -320,12 +150,9 @@
                 return this.mapaTablero.some(tetri => tetri.y < 0);
             }
 
-
             get errores() {
                 return !tetrimino.colisiones || this.colisionesEntreEllos;
             }
-
-
 
             get colisionesEntreEllos() {
                 for (const tetri of this.mapaTablero) {
@@ -339,7 +166,6 @@
                 return false;
             }
 
-
             get colisiones() {
                 for (const tetri of this.mapaTablero) {
                     if (tetri.x < 0 || tetri.x >= tablero.columnas || tetri.y >= tablero.filas) {
@@ -348,7 +174,6 @@
                 }
                 return true;
             }
-
 
             colocarEnTablero() {
                 let tetriminoAlTope = false;
@@ -366,47 +191,317 @@
                 if (tetriminoAlTope) {
                     tablero = new Tablero();
                     tetrimino = new Tetrimino();
-                    console.log('Juego reiniciado: tetrimino alcanzó el tope');
+
                 } else {
                     tablero.eliminarFilasCompletas();
+
                 }
+                sonidoColocacion.play();
+
             }
 
             get mapaTablero() {
-                let retorno = []
+                let retorno = [];
                 for (const tetri of this.mapa) {
-                    let copiar = tetri.copy().add(this.posicion)
-                    retorno.push(copiar)
+                    let copiar = tetri.copy().add(this.posicion);
+                    retorno.push(copiar);
                 }
-                return retorno
+                return retorno;
             }
 
             get mapaCanvas() {
-                let retorno = []
+                let retorno = [];
                 for (const tetri of this.mapa) {
-                    let copiar = tetri.copy().add(this.posicion)
-                    retorno.push(tablero.coordenada(copiar.x, copiar.y))
+                    let copiar = tetri.copy().add(this.posicion);
+                    retorno.push(tablero.coordenada(copiar.x, copiar.y));
                 }
-                return retorno
+                return retorno;
             }
 
             dibujar() {
-                push()
-                fill(this.color)
+                push();
+                fill(this.color);
                 for (const tetri of this.mapaCanvas) {
-                    Tetrimino.dibujarTetri(tetri)
+                    rect(tetri.x, tetri.y, tablero.lado_celda);
                 }
-                pop()
+                pop();
             }
 
             static dibujarTetri(tetri) {
-                rect(tetri.x, tetri.y, tablero.lado_celda)
-
+                rect(tetri.x, tetri.y, tablero.lado_celda);
             }
 
+            dibujarVistaPrevia() {
+                push();
+                fill(this.color);
+                for (const tetri of this.mapaVistaPrevia) {
+                    rect(tetri.x, tetri.y, 20);
+                }
+                pop();
+            }
 
+            get mapaVistaPrevia() {
+                let retorno = [];
+                for (const tetri of this.mapa) {
+                    let copiar = tetri.copy().mult(20);
+                    retorno.push(copiar);
+                }
+                return retorno;
+            }
         }
-        
+
+        class Tablero {
+            constructor() {
+                this.columnas = 10;
+                this.filas = 20;
+                this.lado_celda = 25;
+                this.ancho = this.columnas * this.lado_celda;
+                this.alto = this.filas * this.lado_celda;
+                this.posicion = createVector(50, 50);
+
+                this.almacenar = [];
+                for (let filas = 0; filas < this.filas; filas++) {
+                    this.almacenar[filas] = [];
+                    for (let columnas = 0; columnas < this.columnas; columnas++) {
+                        this.almacenar[filas].push("");
+                    }
+                }
+            }
+
+            eliminarFilasCompletas() {
+                let filasEliminadas = 0;
+                for (let fila = this.filas - 1; fila >= 0; fila--) {
+                    let filaCompleta = true;
+                    for (let columna = 0; columna < this.columnas; columna++) {
+                        if (!this.almacenar[columna][fila]) {
+                            filaCompleta = false;
+                            break;
+                        }
+                    }
+
+                    if (filaCompleta) {
+                        this.eliminarFila(fila);
+                        filasEliminadas++;
+
+                        puntaje += 100;
+                        fila++;
+                    }
+                }
+
+
+                if (filasEliminadas > 0) {
+                    sonidoEliminacion.play();
+                }
+            }
+
+            eliminarFila(fila) {
+                for (let y = fila; y > 0; y--) {
+                    for (let columna = 0; columna < this.columnas; columna++) {
+                        this.almacenar[columna][y] = this.almacenar[columna][y - 1];
+                    }
+                }
+
+                for (let columna = 0; columna < this.columnas; columna++) {
+                    this.almacenar[columna][0] = "";
+                }
+            }
+
+            set almacenarMinos(tetrimino) {
+                for (const tetri of tetrimino.mapaTablero) {
+                    if (tetri.y < 0) {
+                        tablero = new Tablero();
+                        tetrimino = new Tetrimino();
+                    }
+
+                    this.almacenar[tetri.x][tetri.y] = { nombre: tetrimino.nombre, color: tetrimino.color };
+                }
+            }
+
+            coordenada(x, y) {
+                return createVector(x, y).mult(this.lado_celda).add(this.posicion);
+            }
+
+            dibujar() {
+                for (let columnas = 0; columnas < this.columnas; columnas++) {
+                    for (let filas = 0; filas < this.filas; filas++) {
+                        if ((columnas + filas) % 2 == 0) {
+                            fill("#7d77ef");
+                        } else {
+                            fill("white");
+                        }
+                        let c = this.coordenada(columnas, filas);
+                        rect(c.x, c.y, this.lado_celda);
+                    }
+                }
+                this.dibujarMinos();
+            }
+
+            dibujarMinos() {
+                push();
+                for (let columnas = 0; columnas < this.columnas; columnas++) {
+                    for (let filas = 0; filas < this.filas; filas++) {
+                        let celda = this.almacenar[columnas][filas];
+                        if (celda) {
+                            fill(celda.color);
+                            Tetrimino.dibujarTetri(this.coordenada(columnas, filas));
+                        }
+                    }
+                }
+                pop();
+            }
+        }
+
+        function mapeo() {
+            tetriminos = {
+                "Z": {
+                    color: "#f00",
+                    mapa: [
+                        createVector(0, 0),
+                        createVector(1, 0),
+                        createVector(1, 1),
+                        createVector(2, 1)
+                    ]
+                },
+                "S": {
+                    color: "#0f0",
+                    mapa: [
+                        createVector(1, 0),
+                        createVector(2, 0),
+                        createVector(0, 1),
+                        createVector(1, 1)
+                    ]
+                },
+                "T": {
+                    color: "#a0a",
+                    mapa: [
+                        createVector(1, 0),
+                        createVector(0, 1),
+                        createVector(1, 1),
+                        createVector(2, 1)
+                    ]
+                },
+                "O": {
+                    color: "#ff0",
+                    mapa: [
+                        createVector(0, 0),
+                        createVector(1, 0),
+                        createVector(0, 1),
+                        createVector(1, 1)
+                    ]
+                },
+                "L": {
+                    color: "#f80",
+                    mapa: [
+                        createVector(0, 0),
+                        createVector(0, 1),
+                        createVector(1, 1),
+                        createVector(2, 1)
+                    ]
+                },
+                "J": {
+                    color: "#00f",
+                    mapa: [
+                        createVector(0, 1),
+                        createVector(1, 1),
+                        createVector(2, 1),
+                        createVector(2, 0)
+                    ]
+                },
+                "I": {
+                    color: "#0ff",
+                    mapa: [
+                        createVector(0, 1),
+                        createVector(1, 1),
+                        createVector(2, 1),
+                        createVector(3, 1)
+                    ]
+                }
+            }
+        }
+
+        /* function draw() {
+            if (pausado) {
+                mostrarPausa();
+            } else {
+                image(fondo, 0, 0, width, height);
+                tablero.dibujar();
+                tetrimino.dibujar();
+                dibujarSiguienteTetrimino();
+                update();
+            }
+        } */
+
+        function draw() {
+            if (pausado) {
+                mostrarPausa();
+            } else {
+                image(fondo, 0, 0, width, height);
+                tablero.dibujar();
+                tetrimino.dibujar();
+                dibujarSiguienteTetrimino();
+                update();
+                dibujarCronometro();
+                dibujarPuntaje();
+
+            }
+        }
+
+
+        function dibujarSiguienteTetrimino() {
+            push();
+            translate(width - 400, 150);
+            fill(255);
+            rect(-30, -40, 120, 120);
+            tetriminoSiguiente.dibujarVistaPrevia();
+            pop();
+        }
+
+        function bajarAutomaticamente() {
+            if (!pausado) {
+                tetrimino.posicion.y++;
+                if (tetrimino.colisionesEntreEllos) {
+                    tetrimino.posicion.y--;
+                    tetrimino.colocarEnTablero();
+
+                    tetrimino = tetriminoSiguiente;
+                    tetriminoSiguiente = new Tetrimino();
+
+                    if (tetrimino.colisionesEntreEllos) {
+                        tablero = new Tablero();
+                        tetrimino = new Tetrimino();
+                        tetriminoSiguiente = new Tetrimino();
+                    }
+                }
+            }
+        }
+        /*  function bajarAutomaticamente() {
+             if (!pausado && !juegoTerminado) {
+                 tetrimino.posicion.y++;
+                 if (tetrimino.colisionesEntreEllos) {
+                     tetrimino.posicion.y--;
+                     tetrimino.colocarEnTablero();
+ 
+                     if (tetrimino.enElTope) {
+                         
+                         juegoTerminado = true;
+                     } else {
+                         tetrimino = tetriminoSiguiente;
+                         tetriminoSiguiente = new Tetrimino();
+                     }
+                 }
+             }
+         } */
+
+
+
+        function mostrarPausa() {
+            fill("#bcbbcd");
+            rect(0, 0, width, height);
+            textSize(55);
+            fill(0);
+            textAlign(CENTER, CENTER);
+            text("PAUSE", width / 2, height / 2);
+        }
 
         function keyPressed() {
             if (key === ' ') {
@@ -429,7 +524,7 @@
             }
         }
 
-     
+
         function update() {
             switch (direction) {
                 case 'up':
@@ -441,12 +536,15 @@
                         tetrimino.posicion.y--;
                         tetrimino.colocarEnTablero();
 
-                        let nuevoTetrimino = new Tetrimino();
-                        if (nuevoTetrimino.colisionesEntreEllos) {
+                        tetrimino = tetriminoSiguiente;
+                        tetriminoSiguiente = new Tetrimino();
+
+                        if (tetrimino.colisionesEntreEllos) {
+                            puntaje = 0;
+                            millis();
                             tablero = new Tablero();
                             tetrimino = new Tetrimino();
-                        } else {
-                            tetrimino = nuevoTetrimino;
+                            tetriminoSiguiente = new Tetrimino();
                         }
                     }
                     break;
@@ -464,8 +562,10 @@
                     break;
             }
             direction = '';
-        }
+
+
+        }  
     </script>
 </body>
 
-</html> 
+</html>
